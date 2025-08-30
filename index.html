@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🍲 My Recipe App</title>
+</head>
+<body>
+  <h1>🍲 My Recipe App</h1>
+
+  <form id="recipeForm">
+    <input type="text" id="title" placeholder="Recipe Title" required />
+    <textarea id="ingredients" placeholder="Ingredients" required></textarea>
+    <button type="submit">Add Recipe</button>
+  </form>
+
+  <h2>Recipes</h2>
+  <ul id="recipeList"></ul>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // ✅ Import Firebase (from CDN, no npm needed)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ✅ Your Firebase config (replace with your own from Firebase Console)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // ✅ Init Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ✅ Form submit handler
+    const form = document.getElementById("recipeForm");
+    const recipeList = document.getElementById("recipeList");
+
+    async function loadRecipes() {
+      recipeList.innerHTML = "";
+      const querySnapshot = await getDocs(collection(db, "recipes"));
+      querySnapshot.forEach((doc) => {
+        const recipe = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${recipe.title} - ${recipe.ingredients}`;
+        recipeList.appendChild(li);
+      });
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("title").value;
+      const ingredients = document.getElementById("ingredients").value;
+
+      try {
+        await addDoc(collection(db, "recipes"), { title, ingredients });
+        form.reset();
+        loadRecipes(); // reload after adding
+      } catch (e) {
+        console.error("Error adding recipe: ", e);
+      }
+    });
+
+    // ✅ Load existing recipes on page load
+    loadRecipes();
+  </script>
+</body>
+</html>
